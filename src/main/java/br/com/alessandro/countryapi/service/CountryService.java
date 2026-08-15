@@ -5,6 +5,7 @@ import br.com.alessandro.countryapi.dto.CountryResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CountryService {
@@ -12,52 +13,40 @@ public class CountryService {
     public List<CountryResponse> convert(
             List<CountryApiResponse> countries) {
 
+        if (countries == null) {
+            return List.of();
+        }
+
         return countries.stream()
+                .filter(Objects::nonNull)
                 .map(this::convert)
+                .filter(Objects::nonNull)
                 .toList();
     }
 
     private CountryResponse convert(CountryApiResponse country) {
 
-        String capital = extractCapital(country);
-
-        String currency = null;
-        String currencySymbol = null;
-
-        if (country.currencies() != null
-                && !country.currencies().isEmpty()) {
-
-            var currencyData =
-                    country.currencies()
-                            .values()
-                            .iterator()
-                            .next();
-
-            currency = currencyData.name();
-            currencySymbol = currencyData.symbol();
+        if (country == null) {
+            return null;
         }
 
-        String language = null;
+        String capital = extractCapital(country);
 
-        if (country.languages() != null
-                && !country.languages().isEmpty()) {
+        String commonName = null;
+        String officialName = null;
 
-            language = country.languages()
-                    .values()
-                    .iterator()
-                    .next();
+        if (country.name() != null) {
+            commonName = country.name().common();
+            officialName = country.name().official();
         }
 
         return new CountryResponse(
-                country.name().common(),
-                country.name().official(),
+                commonName,
+                officialName,
                 capital,
                 country.region(),
                 country.subregion(),
-                country.population(),
-                currency,
-                currencySymbol,
-                language
+                country.population()
         );
     }
 

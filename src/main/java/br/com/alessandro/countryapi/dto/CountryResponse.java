@@ -6,9 +6,6 @@ public record CountryResponse(
         String capital,
         String region,
         String subregion,
-        Long population,
-        String currency,
-        String currencySymbol,
-        String language
+        Long population
 ) {
 }

@@ -1,6 +1,7 @@
 package br.com.alessandro.countryapi.adapter;
 
 import br.com.alessandro.countryapi.dto.CountryApiResponse;
+import br.com.alessandro.countryapi.dto.RestCountriesResponse;
 import br.com.alessandro.countryapi.exception.CountryNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,52 +17,60 @@ public class RestCountriesAdapter implements CountryProvider {
 
     public RestCountriesAdapter(
             RestClient.Builder builder,
-            @Value("${restcountries.base-url}") String baseUrl) {
+            @Value("${restcountries.base-url}") String baseUrl,
+            @Value("${restcountries.api-key}") String apiKey) {
 
         this.restClient = builder
                 .baseUrl(baseUrl)
+                .defaultHeader("Authorization", "Bearer " + apiKey)
                 .build();
     }
 
     @Override
     public List<CountryApiResponse> findByName(String name) {
 
-        List<CountryApiResponse> response = restClient
+        RestCountriesResponse response = restClient
                 .get()
-                .uri(uriBuilder ->
-                        uriBuilder
-                                .path("/v3.1/name/{name}")
-                                .build(name))
+                .uri(uriBuilder -> uriBuilder
+                        .path("/countries/v5")
+                        .queryParam("q", name)
+                        .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+                .body(new ParameterizedTypeReference<RestCountriesResponse>() {});
 
-        if (response == null || response.isEmpty()) {
+        if (response == null
+                || response.data() == null
+                || response.data().objects() == null
+                || response.data().objects().isEmpty()) {
+
             throw new CountryNotFoundException(
                     "País não encontrado: " + name);
         }
 
-        return response;
+        return response.data().objects();
     }
 
     @Override
     public List<CountryApiResponse> findByRegion(String region) {
 
-        List<CountryApiResponse> response = restClient
+        RestCountriesResponse response = restClient
                 .get()
-                .uri(uriBuilder ->
-                        uriBuilder
-                                .path("/v3.1/region/{region}")
-                                .build(region))
+                .uri(uriBuilder -> uriBuilder
+                        .path("/countries/v5")
+                        .queryParam("region", region)
+                        .build())
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                });
+                .body(new ParameterizedTypeReference<RestCountriesResponse>() {});
 
-        if (response == null || response.isEmpty()) {
+        if (response == null
+                || response.data() == null
+                || response.data().objects() == null
+                || response.data().objects().isEmpty()) {
+
             throw new CountryNotFoundException(
                     "Nenhum país encontrado para a região: " + region);
         }
 
-        return response;
+        return response.data().objects();
     }
 }

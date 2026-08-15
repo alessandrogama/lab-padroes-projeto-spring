@@ -1,3 +1,9 @@
 spring:
   application:
     name: lab-padroes-projeto-spring
+server:
+  port: 8080
+
+restcountries:
+  base-url: https://api.restcountries.com/
+  api-key: ${API_REST_COUNTRIES}
